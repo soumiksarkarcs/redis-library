@@ -5,6 +5,30 @@ import (
 )
 
 /* To set a new record in redis
+   Parameter 1: Represents  name of the hash
+   Parameter 2: Represents one of the field of hash
+   Parameter 3: Represents value of the specified field of hash
+   Parameter 4: Represents client connection to redis server
+   Return type: nil if true;
+   				else error
+*/
+func HSetKey(hash string, field string, value string, client *redis.Client) error {
+	err := client.HSet(hash, field, value).Err()
+	return err
+}
+
+/* To get the field value of an existing hash in redis
+   Parameter 1: Represents  name of the hash
+   Parameter 2: Represents one of the field of hash
+   Parameter 3: Represents client connection to redis server
+   Return type: *redis.StringCmd
+*/
+func HGetKey(hash string, field string, client *redis.Client) *redis.StringCmd {
+	cmd := client.HGet(hash, field)
+	return cmd
+}
+
+/* To set a new record in redis
    Parameter 1: Represents key of the new entry
    Parameter 2: Represents the value of above key
    Parameter 3: Represents client connection to redis server

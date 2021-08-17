@@ -4,6 +4,18 @@ import (
 	"github.com/go-redis/redis"
 )
 
+type Redis interface {
+	HSetKey(string, string, string) error
+	HGetKey(string, string) *redis.StringCmd
+	SetKey(string, interface{}) error
+	GetKey(string) (string, error)
+	GetConnection(string) error
+}
+
+type RedisClient struct {
+	client *redis.Client
+}
+
 /* To set a new record in redis
    Parameter 1: Represents  name of the hash
    Parameter 2: Represents one of the field of hash
@@ -12,8 +24,8 @@ import (
    Return type: nil if true;
    				else error
 */
-func HSetKey(hash string, field string, value string, client *redis.Client) error {
-	err := client.HSet(hash, field, value).Err()
+func (c *RedisClient) HSetKey(hash string, field string, value string) error {
+	err := c.client.HSet(hash, field, value).Err()
 	return err
 }
 
@@ -23,8 +35,8 @@ func HSetKey(hash string, field string, value string, client *redis.Client) erro
    Parameter 3: Represents client connection to redis server
    Return type: *redis.StringCmd
 */
-func HGetKey(hash string, field string, client *redis.Client) *redis.StringCmd {
-	cmd := client.HGet(hash, field)
+func (c *RedisClient) HGetKey(hash string, field string) *redis.StringCmd {
+	cmd := c.client.HGet(hash, field)
 	return cmd
 }
 
@@ -35,8 +47,8 @@ func HGetKey(hash string, field string, client *redis.Client) *redis.StringCmd {
    Return type: nil if true;
    				else error
 */
-func SetKey(key string, value interface{}, client *redis.Client) error {
-	err := client.Set(key, value, 0).Err()
+func (c *RedisClient) SetKey(key string, value interface{}) error {
+	err := c.client.Set(key, value, 0).Err()
 	return err
 }
 
@@ -46,8 +58,8 @@ func SetKey(key string, value interface{}, client *redis.Client) error {
    Return type: (value, nil) if success;
                 else error
 */
-func GetKey(key string, client *redis.Client) (string, error) {
-	val, err := client.Get(key).Result()
+func (c *RedisClient) GetKey(key string) (string, error) {
+	val, err := c.client.Get(key).Result()
 	return val, err
 }
 
@@ -56,14 +68,14 @@ func GetKey(key string, client *redis.Client) (string, error) {
    Return type: (client, nil) if success;
                 else (nil, error)
 */
-func GetConnection(hostAddress string) (*redis.Client, error) {
-	client := redis.NewClient(&redis.Options{
+func (c *RedisClient) GetConnection(hostAddress string) error {
+	c.client = redis.NewClient(&redis.Options{
 		Addr:     hostAddress,
 		Password: "",
 		DB:       0,
 	})
-	if err := client.Ping().Err(); err != nil {
-		return nil, err
+	if err := c.client.Ping().Err(); err != nil {
+		return err
 	}
-	return client, nil
+	return nil
 }
